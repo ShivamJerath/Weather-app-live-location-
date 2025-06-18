@@ -377,3 +377,34 @@ body {
         align-items: center;
     }
 }
+
+footer {
+    width: 100%;
+    padding: 10px 20px;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(139, 69, 19, 0.7), rgba(218, 165, 32, 0.7)); /* Translucent warmer gradient */
+    backdrop-filter: blur(10px);
+    color: #ffffff;
+    font-size: 14px;
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3);
+    border-radius: 10px 10px 0 0;
+    margin-top: 20px;
+}
+
+footer p {
+    margin: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #8B4513, #DAA520); /* Warmer gradient as suggested */
+    backdrop-filter: blur(10px);
+}
+
+.container {
+    flex: 1 0 auto; /* Allows container to grow but not shrink below content */
+}
+
+/* Rest of the existing CSS remains unchanged... */
