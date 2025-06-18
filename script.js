@@ -1,9 +1,11 @@
 const apiKey ="a214f1b2dfdad1a35049679719c0204c";
 const currentWeatherUrl = "https://api.openweathermap.org/data/2.5/weather";
 const forecastUrl = "https://api.openweathermap.org/data/2.5/forecast";
+let unit = "metric"; // Default unit
+let currentData = null;
+let forecastData = null;
 
-async function getWeather() {
-    const city = document.getElementById("city-input").value.trim();
+async function getWeather(city = document.getElementById("city-input").value.trim()) {
     const errorMessage = document.getElementById("error-message");
     const loading = document.getElementById("loading");
 
@@ -17,21 +19,23 @@ async function getWeather() {
 
     try {
         // Fetch current weather
-        const currentResponse = await fetch(`${currentWeatherUrl}?q=${city}&appid=${apiKey}&units=metric`);
+        const currentResponse = await fetch(`${currentWeatherUrl}?q=${city}&appid=${apiKey}&units=${unit}`);
         if (!currentResponse.ok) {
             throw new Error("City not found or API error");
         }
-        const currentData = await currentResponse.json();
+        currentData = await currentResponse.json();
         console.log("Current Weather Data:", currentData);
 
-        // Fetch 5-day forecast (includes hourly data every 3 hours)
-        const forecastResponse = await fetch(`${forecastUrl}?q=${city}&appid=${apiKey}&units=metric`);
+        // Fetch 5-day forecast
+        const forecastResponse = await fetch(`${forecastUrl}?q=${city}&appid=${apiKey}&units=${unit}`);
         if (!forecastResponse.ok) {
             throw new Error("Forecast data unavailable");
         }
-        const forecastData = await forecastResponse.json();
+        forecastData = await forecastResponse.json();
         console.log("Forecast Data:", forecastData);
 
+        // Update recent searches
+        updateRecentSearches(city);
         updateUI(currentData, forecastData);
     } catch (error) {
         console.error("Error fetching weather:", error);
@@ -55,16 +59,17 @@ async function getWeatherByLocation() {
         async (position) => {
             const { latitude, longitude } = position.coords;
             try {
-                const currentResponse = await fetch(`${currentWeatherUrl}?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric`);
+                const currentResponse = await fetch(`${currentWeatherUrl}?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=${unit}`);
                 if (!currentResponse.ok) throw new Error("Location data unavailable");
-                const currentData = await currentResponse.json();
+                currentData = await currentResponse.json();
                 console.log("Current Weather (Location):", currentData);
 
-                const forecastResponse = await fetch(`${forecastUrl}?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric`);
+                const forecastResponse = await fetch(`${forecastUrl}?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=${unit}`);
                 if (!forecastResponse.ok) throw new Error("Forecast data unavailable");
-                const forecastData = await forecastResponse.json();
+                forecastData = await forecastResponse.json();
                 console.log("Forecast (Location):", forecastData);
 
+                updateRecentSearches(currentData.name);
                 updateUI(currentData, forecastData);
             } catch (error) {
                 console.error("Error fetching location weather:", error);
@@ -93,41 +98,43 @@ function updateUI(currentData, forecastData) {
     const currentIcon = document.getElementById("current-icon");
 
     cityName.textContent = currentData.name;
-    const temp = Math.round(currentData.main.temp);
-    currentTemp.textContent = `${temp}°C`;
+    const temp = Math.round(unit === "metric" ? currentData.main.temp : (currentData.main.temp * 9/5) + 32);
+    currentTemp.textContent = `${temp}${unit === "metric" ? "°C" : "°F"}`;
     currentDesc.textContent = currentData.weather[0].description;
     currentHumidity.textContent = `${currentData.main.humidity}%`;
-    currentWind.textContent = `${currentData.wind.speed} km/h`;
+    currentWind.textContent = `${currentData.wind.speed} ${unit === "metric" ? "km/h" : "mph"}`;
     currentPressure.textContent = `${currentData.main.pressure} hPa`;
     currentSunrise.textContent = new Date(currentData.sys.sunrise * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     currentSunset.textContent = new Date(currentData.sys.sunset * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     currentIcon.src = `http://openweathermap.org/img/wn/${currentData.weather[0].icon}@2x.png`;
     currentIcon.style.display = "block";
 
-    // Update background based on temperature
+    // Update body background based on temperature (converted to Celsius for consistency)
+    const tempCelsius = unit === "metric" ? currentData.main.temp : (currentData.main.temp - 32) * 5/9;
     document.body.className = "";
-    if (temp < -10) {
+    if (tempCelsius < -10) {
         document.body.classList.add("very-cold");
-    } else if (temp <= 0) {
+    } else if (tempCelsius <= 0) {
         document.body.classList.add("cold");
-    } else if (temp <= 15) {
+    } else if (tempCelsius <= 15) {
         document.body.classList.add("cool");
-    } else if (temp <= 25) {
+    } else if (tempCelsius <= 25) {
         document.body.classList.add("warm");
     } else {
         document.body.classList.add("hot");
     }
 
-    // Update hourly forecast (next 24 hours, 3-hour intervals)
+    // Update hourly forecast
     const hourlyList = document.getElementById("hourly-list");
     hourlyList.innerHTML = "";
-    forecastData.list.slice(0, 8).forEach(item => { // 8 intervals = 24 hours
+    forecastData.list.slice(0, 8).forEach(item => {
         const time = new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const temp = Math.round(unit === "metric" ? item.main.temp : (item.main.temp * 9/5) + 32);
         hourlyList.innerHTML += `
             <div class="hourly-item">
                 <p>${time}</p>
                 <img src="http://openweathermap.org/img/wn/${item.weather[0].icon}.png" alt="Weather Icon">
-                <p>${Math.round(item.main.temp)}°C</p>
+                <p>${temp}${unit === "metric" ? "°C" : "°F"}</p>
                 <p>${item.weather[0].description}</p>
             </div>
         `;
@@ -136,21 +143,55 @@ function updateUI(currentData, forecastData) {
     // Update 5-day forecast
     const dailyList = document.getElementById("daily-list");
     dailyList.innerHTML = "";
-    const dailyData = forecastData.list.filter((item, index) => index % 8 === 0).slice(0, 5); // One per day
+    const dailyData = forecastData.list.filter((item, index) => index % 8 === 0).slice(0, 5);
     dailyData.forEach(item => {
         const date = new Date(item.dt * 1000).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+        const temp = Math.round(unit === "metric" ? item.main.temp : (item.main.temp * 9/5) + 32);
         dailyList.innerHTML += `
             <div class="daily-item">
                 <p>${date}</p>
                 <img src="http://openweathermap.org/img/wn/${item.weather[0].icon}.png" alt="Weather Icon">
-                <p>Temp: ${Math.round(item.main.temp)}°C</p>
+                <p>Temp: ${temp}${unit === "metric" ? "°C" : "°F"}</p>
                 <p>${item.weather[0].description}</p>
             </div>
         `;
     });
 
-    // Show current tab by default
+    // Show current tab
     showTab("current");
+}
+
+function toggleUnit() {
+    unit = unit === "metric" ? "imperial" : "metric";
+    document.getElementById("unit-toggle").textContent = unit === "metric" ? "°C/°F" : "°F/°C";
+    if (currentData && forecastData) {
+        updateUI(currentData, forecastData);
+    }
+}
+
+function updateRecentSearches(city) {
+    let searches = JSON.parse(localStorage.getItem("recentSearches") || "[]");
+    if (!searches.includes(city)) {
+        searches.unshift(city); // Add to start
+        if (searches.length > 5) searches.pop(); // Limit to 5
+        localStorage.setItem("recentSearches", JSON.stringify(searches));
+    }
+    displayRecentSearches();
+}
+
+function displayRecentSearches() {
+    const searchList = document.getElementById("recent-search-list");
+    const searches = JSON.parse(localStorage.getItem("recentSearches") || "[]");
+    searchList.innerHTML = "";
+    searches.forEach(city => {
+        const li = document.createElement("li");
+        li.textContent = city;
+        li.onclick = () => {
+            document.getElementById("city-input").value = city;
+            getWeather(city);
+        };
+        searchList.appendChild(li);
+    });
 }
 
 function showTab(tabId) {
@@ -163,6 +204,9 @@ function showTab(tabId) {
     document.getElementById(tabId).classList.add("active");
     document.querySelector(`button[onclick="showTab('${tabId}')"]`).classList.add("active");
 }
+
+// Load recent searches on page load
+document.addEventListener("DOMContentLoaded", displayRecentSearches);
 
 // Allow pressing Enter to search
 document.getElementById("city-input").addEventListener("keypress", function (event) {
