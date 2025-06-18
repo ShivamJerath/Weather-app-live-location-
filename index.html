@@ -12,14 +12,14 @@
     <div class="container">
         <div class="search-box">
             <input type="text" id="city-input" placeholder="Enter city name">
-            <button onclick="getWeather()">Search</button>
-            <button onclick="getWeatherByLocation()">Use My Location</button>
-            <button id="unit-toggle" onclick="toggleUnit()">To °F</button>
+            <button id="search-btn">Search</button>
+            <button id="location-btn">Use My Location</button>
+            <button id="unit-toggle">To °F</button>
         </div>
         <div class="tabs">
-            <button class="tab active" onclick="showTab('current')">Current</button>
-            <button class="tab" onclick="showTab('hourly')">Hourly</button>
-            <button class="tab" onclick="showTab('daily')">5-Day</button>
+            <button class="tab active" data-tab="current">Current</button>
+            <button class="tab" data-tab="hourly">Hourly</button>
+            <button class="tab" data-tab="daily">5-Day</button>
         </div>
         <div id="error-message" class="error"></div>
         <div id="loading" class="loading">Loading...</div>
