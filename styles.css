@@ -1,0 +1,220 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #3b82f6, #1e3a8a); /* Default: cool */
+    transition: background 0.5s ease;
+}
+
+.container {
+    text-align: center;
+    padding: 20px;
+    max-width: 800px;
+    width: 100%;
+}
+
+.search-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.search-box input {
+    padding: 12px;
+    width: 250px;
+    border: none;
+    border-radius: 25px;
+    outline: none;
+    font-size: 16px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    backdrop-filter: blur(10px);
+}
+
+.search-box input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.search-box button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 25px;
+    background: #ffffff;
+    color: #3b82f6;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s;
+}
+
+.search-box button:hover {
+    background: #e0e0e0;
+    transform: scale(1.05);
+}
+
+.tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.tab {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s;
+}
+
+.tab.active {
+    background: #ffffff;
+    color: #3b82f6;
+    transform: scale(1.1);
+}
+
+.tab:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.weather-section {
+    display: none;
+}
+
+.weather-section.active {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+.weather-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 30px;
+    color: white;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.weather-card:hover {
+    transform: translateY(-5px);
+}
+
+.weather-card h2 {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.weather-card img {
+    width: 100px;
+    margin: 10px 0;
+}
+
+.weather-card p {
+    font-size: 20px;
+    margin: 8px 0;
+}
+
+.details p {
+    font-size: 16px;
+    margin: 10px 0;
+}
+
+.hourly-forecast, .daily-forecast {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 20px;
+    overflow-x: auto;
+}
+
+#hourly-list, #daily-list {
+    display: flex;
+    gap: 20px;
+}
+
+.hourly-item, .daily-item {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 15px;
+    min-width: 120px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.hourly-item:hover, .daily-item:hover {
+    transform: scale(1.05);
+}
+
+.hourly-item img, .daily-item img {
+    width: 50px;
+}
+
+.error {
+    color: #ff6b6b;
+    font-size: 16px;
+    margin: 10px 0;
+}
+
+.loading {
+    display: none;
+    font-size: 18px;
+    color: white;
+    margin: 20px 0;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Temperature-based backgrounds */
+.cold {
+    background: linear-gradient(135deg, #a5f3fc, #38bdf8); /* Light to icy blue */
+}
+
+.cool {
+    background: linear-gradient(135deg, #3b82f6, #1e3a8a); /* Light to medium blue */
+}
+
+.mild {
+    background: linear-gradient(135deg, #2dd4bf, #059669); /* Teal to green */
+}
+
+.warm {
+    background: linear-gradient(135deg, #fb923c, #f97316); /* Light to warm orange */
+}
+
+.hot {
+    background: linear-gradient(135deg, #f87171, #b91c1c); /* Deep orange to red */
+}
+
+@media (max-width: 600px) {
+    .search-box {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .search-box input, .search-box button {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .weather-card {
+        padding: 20px;
+    }
+
+    .tabs {
+        flex-wrap: wrap;
+    }
+}
