@@ -10,7 +10,7 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #3b82f6, #1e3a8a); /* Default: cool */
+    background: linear-gradient(135deg, #4fc3f7, #01579b); /* Default: cool */
     transition: background 0.5s ease;
 }
 
@@ -178,25 +178,25 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Temperature-based backgrounds */
+/* Temperature-based backgrounds (blue and yellowish-orange shades) */
+.very-cold {
+    background: linear-gradient(135deg, #e0f7fa, #4fc3f7); /* Light icy blue to medium blue */
+}
+
 .cold {
-    background: linear-gradient(135deg, #a5f3fc, #38bdf8); /* Light to icy blue */
+    background: linear-gradient(135deg, #b3e5fc, #0288d1); /* Pale blue to medium blue */
 }
 
 .cool {
-    background: linear-gradient(135deg, #3b82f6, #1e3a8a); /* Light to medium blue */
-}
-
-.mild {
-    background: linear-gradient(135deg, #2dd4bf, #059669); /* Teal to green */
+    background: linear-gradient(135deg, #4fc3f7, #01579b); /* Light blue to deep blue */
 }
 
 .warm {
-    background: linear-gradient(135deg, #fb923c, #f97316); /* Light to warm orange */
+    background: linear-gradient(135deg, #ffe082, #ffca28); /* Light yellowish-orange to warm orange */
 }
 
 .hot {
-    background: linear-gradient(135deg, #f87171, #b91c1c); /* Deep orange to red */
+    background: linear-gradient(135deg, #ffb300, #f57c00); /* Deep yellowish-orange to intense orange */
 }
 
 @media (max-width: 600px) {
