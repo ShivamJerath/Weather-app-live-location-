@@ -10,7 +10,7 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, rgba(79, 195, 247, 0.3), rgba(1, 87, 155, 0.3)); /* Default: cool */
+    background: linear-gradient(135deg, rgba(100, 149, 237, 0.3), rgba(25, 25, 112, 0.3)); /* Default: cool */
     backdrop-filter: blur(10px);
     transition: background 0.5s ease;
 }
@@ -234,24 +234,12 @@ body {
 }
 
 /* Temperature-based translucent body backgrounds */
-.very-cold {
-    background: linear-gradient(135deg, rgba(224, 247, 250, 0.3), rgba(79, 195, 247, 0.3)); /* Icy blue */
-}
-
-.cold {
-    background: linear-gradient(135deg, rgba(179, 229, 252, 0.3), rgba(2, 136, 209, 0.3)); /* Pale to medium blue */
-}
-
 .cool {
-    background: linear-gradient(135deg, rgba(79, 195, 247, 0.3), rgba(1, 87, 155, 0.3)); /* Light to deep blue */
+    background: linear-gradient(135deg, rgba(100, 149, 237, 0.3), rgba(25, 25, 112, 0.3)); /* Blue */
 }
 
 .warm {
-    background: linear-gradient(135deg, rgba(255, 224, 130, 0.3), rgba(255, 202, 40, 0.3)); /* Light to warm yellowish-orange */
-}
-
-.hot {
-    background: linear-gradient(135deg, rgba(255, 179, 0, 0.3), rgba(245, 124, 0, 0.3)); /* Deep to intense yellowish-orange */
+    background: linear-gradient(135deg, rgba(255, 165, 0, 0.3), rgba(204, 85, 0, 0.3)); /* Orangish */
 }
 
 @media (max-width: 600px) {
