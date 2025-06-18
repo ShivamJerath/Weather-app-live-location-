@@ -13,6 +13,7 @@
             <input type="text" id="city-input" placeholder="Enter city name">
             <button onclick="getWeather()">Search</button>
             <button onclick="getWeatherByLocation()">Use My Location</button>
+            <button id="unit-toggle" onclick="toggleUnit()">°C/°F</button>
         </div>
         <div class="tabs">
             <button class="tab active" onclick="showTab('current')">Current</button>
@@ -51,6 +52,12 @@
             <div class="daily-forecast">
                 <div id="daily-list"></div>
             </div>
+        </div>
+
+        <!-- Recent Searches -->
+        <div class="recent-searches">
+            <h3>Recent Searches</h3>
+            <ul id="recent-search-list"></ul>
         </div>
     </div>
     <script src="script.js"></script>
