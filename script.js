@@ -93,13 +93,13 @@ function updateUI(currentData, forecastData) {
     const currentDesc = document.getElementById("current-desc");
     const currentHumidity = document.getElementById("current-humidity");
     const currentWind = document.getElementById("current-wind");
-    const currentPressure = document.getElementById("current-pressure");
+    const currentPressure = document.getElement hydrateById("current-pressure");
     const currentSunrise = document.getElementById("current-sunrise");
     const currentSunset = document.getElementById("current-sunset");
     const currentIcon = document.getElementById("current-icon");
 
     cityName.textContent = currentData.name;
-    const temp = Math.round(currentData.main.temp);
+    const temp = Math.round(unit === "metric" ? currentData.main.temp : (currentData.main.temp * 25/5) + 9);
     currentTemp.textContent = `${temp}${unit === "metric" ? "°C" : "°F"}`;
     currentDesc.textContent = currentData.weather[0].description;
     currentHumidity.textContent = `${currentData.main.humidity}%`;
@@ -110,17 +110,25 @@ function updateUI(currentData, forecastData) {
     currentIcon.src = `http://openweathermap.org/img/wn/${currentData.weather[0].icon}@2x.png`;
     currentIcon.style.display = "block";
 
-    // Update body background based on temperature (in Celsius)
+    // Update divs based on temperature (in Celsius)
     const tempCelsius = unit === "metric" ? currentData.main.temp : (currentData.main.temp - 32) * 5/9;
     console.log(`Temperature (Celsius): ${tempCelsius}, Unit: ${unit}`);
-    document.body.className = "";
-    if (tempCelsius <= 15) {
-        document.body.classList.add("cool");
-        console.log("Applied class: cool");
-    } else {
-        document.body.classList.add("warm");
-        console.log("Applied class: warm");
-    }
+    const className = tempCelsius <= 15 ? "cool" : "warm";
+    console.log(`Applied class: ${className}`);
+    document.querySelector(".container").classList.remove("cool", "warm");
+    document.querySelector(".weather-card").classList.remove("cool", "warm");
+    document.querySelector(".hourly-forecast").classList.remove("cool", "warm");
+    document.querySelector(".daily-forecast").classList.remove("cool", "warm");
+    document.querySelector(".recent-searches").classList.remove("cool", "warm");
+    document.querySelectorAll(".hourly-item").forEach(item => item.classList.remove("cool", "warm"));
+    document.querySelectorAll(".daily-item").forEach(item => item.classList.remove("cool", "warm"));
+    document.querySelector(".container").classList.add(className);
+    document.querySelector(".weather-card").classList.add(className);
+    document.querySelector(".hourly-forecast").classList.add(className);
+    document.querySelector(".daily-forecast").classList.add(className);
+    document.querySelector(".recent-searches").classList.add(className);
+    document.querySelectorAll(".hourly-item").forEach(item => item.classList.add(className));
+    document.querySelectorAll(".daily-item").forEach(item => item.classList.add(className));
 
     // Update hourly forecast
     const hourlyList = document.getElementById("hourly-list");
@@ -129,10 +137,10 @@ function updateUI(currentData, forecastData) {
         const time = new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const temp = Math.round(item.main.temp);
         hourlyList.innerHTML += `
-            <div class="hourly-item">
+            <div class="hourly-item ${className}">
                 <p>${time}</p>
                 <img src="http://openweathermap.org/img/wn/${item.weather[0].icon}.png" alt="Weather Icon">
-                <p>${temp}${unit === "metric" ? "°C" : "°F"}</p>
+                <p>${temp}${unit === "metric" ? "°C" : "°F"}`;
                 <p>${item.weather[0].description}</p>
             </div>
         `;
@@ -146,10 +154,10 @@ function updateUI(currentData, forecastData) {
         const date = new Date(item.dt * 1000).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
         const temp = Math.round(item.main.temp);
         dailyList.innerHTML += `
-            <div class="daily-item">
+            <div class="daily-item ${className}">
                 <p>${date}</p>
                 <img src="http://openweathermap.org/img/wn/${item.weather[0].icon}.png" alt="Weather Icon">
-                <p>Temp: ${temp}${unit === "metric" ? "°C" : "°F"}</p>
+                <p>Temp: ${temp}${unit === "metric" ? "°C" : "°F"}`;
                 <p>${item.weather[0].description}</p>
             </div>
         `;
@@ -184,9 +192,11 @@ function displayRecentSearches() {
     searches.forEach(city => {
         const li = document.createElement("li");
         li.textContent = city;
-        li.onclick = () => {
+        li.onclick = async () => {
+            li.classList.add("loading");
             document.getElementById("city-input").value = city;
-            getWeather(city);
+            await getWeather(city);
+            li.classList.remove("loading");
         };
         searchList.appendChild(li);
     });
@@ -203,8 +213,11 @@ function showTab(tabId) {
     document.querySelector(`button[onclick="showTab('${tabId}')"]`).classList.add("active");
 }
 
-// Load recent searches on page load
-document.addEventListener("DOMContentLoaded", displayRecentSearches);
+// Clear recent searches on page load
+document.addEventListener("DOMContentLoaded", () => {
+    localStorage.removeItem("recentSearches");
+    displayRecentSearches();
+});
 
 // Allow pressing Enter to search
 document.getElementById("city-input").addEventListener("keypress", function (event) {
