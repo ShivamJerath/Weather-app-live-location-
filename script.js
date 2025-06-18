@@ -2,8 +2,7 @@ const apiKey ="a214f1b2dfdad1a35049679719c0204c";
 const currentWeatherUrl = "https://api.openweathermap.org/data/2.5/weather";
 const forecastUrl = "https://api.openweathermap.org/data/2.5/forecast";
 let unit = "metric"; // Default unit
-let currentData = null;
-let forecastData = null;
+let lastCity = null; // Track last searched city
 
 async function getWeather(city = document.getElementById("city-input").value.trim()) {
     const errorMessage = document.getElementById("error-message");
@@ -23,7 +22,7 @@ async function getWeather(city = document.getElementById("city-input").value.tri
         if (!currentResponse.ok) {
             throw new Error("City not found or API error");
         }
-        currentData = await currentResponse.json();
+        const currentData = await currentResponse.json();
         console.log("Current Weather Data:", currentData);
 
         // Fetch 5-day forecast
@@ -31,10 +30,11 @@ async function getWeather(city = document.getElementById("city-input").value.tri
         if (!forecastResponse.ok) {
             throw new Error("Forecast data unavailable");
         }
-        forecastData = await forecastResponse.json();
+        const forecastData = await forecastResponse.json();
         console.log("Forecast Data:", forecastData);
 
         // Update recent searches
+        lastCity = city;
         updateRecentSearches(city);
         updateUI(currentData, forecastData);
     } catch (error) {
@@ -61,14 +61,15 @@ async function getWeatherByLocation() {
             try {
                 const currentResponse = await fetch(`${currentWeatherUrl}?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=${unit}`);
                 if (!currentResponse.ok) throw new Error("Location data unavailable");
-                currentData = await currentResponse.json();
+                const currentData = await currentResponse.json();
                 console.log("Current Weather (Location):", currentData);
 
                 const forecastResponse = await fetch(`${forecastUrl}?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=${unit}`);
                 if (!forecastResponse.ok) throw new Error("Forecast data unavailable");
-                forecastData = await forecastResponse.json();
+                const forecastData = await forecastResponse.json();
                 console.log("Forecast (Location):", forecastData);
 
+                lastCity = currentData.name;
                 updateRecentSearches(currentData.name);
                 updateUI(currentData, forecastData);
             } catch (error) {
@@ -98,7 +99,7 @@ function updateUI(currentData, forecastData) {
     const currentIcon = document.getElementById("current-icon");
 
     cityName.textContent = currentData.name;
-    const temp = Math.round(unit === "metric" ? currentData.main.temp : (currentData.main.temp * 9/5) + 32);
+    const temp = Math.round(currentData.main.temp);
     currentTemp.textContent = `${temp}${unit === "metric" ? "°C" : "°F"}`;
     currentDesc.textContent = currentData.weather[0].description;
     currentHumidity.textContent = `${currentData.main.humidity}%`;
@@ -109,7 +110,7 @@ function updateUI(currentData, forecastData) {
     currentIcon.src = `http://openweathermap.org/img/wn/${currentData.weather[0].icon}@2x.png`;
     currentIcon.style.display = "block";
 
-    // Update body background based on temperature (converted to Celsius for consistency)
+    // Update body background based on temperature (in Celsius)
     const tempCelsius = unit === "metric" ? currentData.main.temp : (currentData.main.temp - 32) * 5/9;
     document.body.className = "";
     if (tempCelsius < -10) {
@@ -129,7 +130,7 @@ function updateUI(currentData, forecastData) {
     hourlyList.innerHTML = "";
     forecastData.list.slice(0, 8).forEach(item => {
         const time = new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const temp = Math.round(unit === "metric" ? item.main.temp : (item.main.temp * 9/5) + 32);
+        const temp = Math.round(item.main.temp);
         hourlyList.innerHTML += `
             <div class="hourly-item">
                 <p>${time}</p>
@@ -146,7 +147,7 @@ function updateUI(currentData, forecastData) {
     const dailyData = forecastData.list.filter((item, index) => index % 8 === 0).slice(0, 5);
     dailyData.forEach(item => {
         const date = new Date(item.dt * 1000).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
-        const temp = Math.round(unit === "metric" ? item.main.temp : (item.main.temp * 9/5) + 32);
+        const temp = Math.round(item.main.temp);
         dailyList.innerHTML += `
             <div class="daily-item">
                 <p>${date}</p>
@@ -163,19 +164,19 @@ function updateUI(currentData, forecastData) {
 
 function toggleUnit() {
     unit = unit === "metric" ? "imperial" : "metric";
-    document.getElementById("unit-toggle").textContent = unit === "metric" ? "°C/°F" : "°F/°C";
-    if (currentData && forecastData) {
-        updateUI(currentData, forecastData);
+    document.getElementById("unit-toggle").textContent = unit === "metric" ? "To °F" : "To °C";
+    console.log("Unit toggled to:", unit);
+    if (lastCity) {
+        getWeather(lastCity); // Re-fetch with new unit
     }
 }
 
 function updateRecentSearches(city) {
     let searches = JSON.parse(localStorage.getItem("recentSearches") || "[]");
-    if (!searches.includes(city)) {
-        searches.unshift(city); // Add to start
-        if (searches.length > 5) searches.pop(); // Limit to 5
-        localStorage.setItem("recentSearches", JSON.stringify(searches));
-    }
+    searches = searches.filter(item => item !== city); // Remove duplicates
+    searches.unshift(city); // Add to start
+    if (searches.length > 5) searches.pop(); // Limit to 5
+    localStorage.setItem("recentSearches", JSON.stringify(searches));
     displayRecentSearches();
 }
 
