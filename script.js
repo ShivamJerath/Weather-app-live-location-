@@ -113,16 +113,10 @@ function updateUI(currentData, forecastData) {
     // Update body background based on temperature (in Celsius)
     const tempCelsius = unit === "metric" ? currentData.main.temp : (currentData.main.temp - 32) * 5/9;
     document.body.className = "";
-    if (tempCelsius < -10) {
-        document.body.classList.add("very-cold");
-    } else if (tempCelsius <= 0) {
-        document.body.classList.add("cold");
-    } else if (tempCelsius <= 15) {
+    if (tempCelsius <= 15) {
         document.body.classList.add("cool");
-    } else if (tempCelsius <= 25) {
-        document.body.classList.add("warm");
     } else {
-        document.body.classList.add("hot");
+        document.body.classList.add("warm");
     }
 
     // Update hourly forecast
