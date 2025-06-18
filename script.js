@@ -1,4 +1,4 @@
-const apiKey = "a214f1b2dfdad1a35049679719c0204c";
+const apiKey ="a214f1b2dfdad1a35049679719c0204c"; 
 const currentWeatherUrl = "https://api.openweathermap.org/data/2.5/weather";
 const forecastUrl = "https://api.openweathermap.org/data/2.5/forecast";
 
@@ -106,13 +106,13 @@ function updateUI(currentData, forecastData) {
 
     // Update background based on temperature
     document.body.className = "";
-    if (temp < 0) {
+    if (temp < -10) {
+        document.body.classList.add("very-cold");
+    } else if (temp <= 0) {
         document.body.classList.add("cold");
     } else if (temp <= 15) {
         document.body.classList.add("cool");
-    } else if (temp <= 20) {
-        document.body.classList.add("mild");
-    } else if (temp <= 30) {
+    } else if (temp <= 25) {
         document.body.classList.add("warm");
     } else {
         document.body.classList.add("hot");
