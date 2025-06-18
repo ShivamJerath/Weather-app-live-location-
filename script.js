@@ -8,8 +8,10 @@ async function getWeather(city) {
     const errorMessage = document.getElementById("error-message");
     const loading = document.getElementById("loading");
 
-    if (!city) {
-        errorMessage.textContent = "Please enter a city name";
+    console.log(`getWeather called with city: "${city}"`);
+    if (!city || typeof city !== "string" || city.trim() === "") {
+        errorMessage.textContent = "Please enter a valid city name";
+        console.log("Invalid city input");
         return;
     }
 
@@ -17,22 +19,22 @@ async function getWeather(city) {
     errorMessage.textContent = "";
 
     try {
-        const currentResponse = await fetch(`${currentWeatherUrl}?q=${city}&appid=${apiKey}&units=${unit}`);
+        const currentResponse = await fetch(`${currentWeatherUrl}?q=${encodeURIComponent(city.trim())}&appid=${apiKey}&units=${unit}`);
         if (!currentResponse.ok) {
             throw new Error("City not found or API error");
         }
         const currentData = await currentResponse.json();
         console.log("Current Weather Data:", currentData);
 
-        const forecastResponse = await fetch(`${forecastUrl}?q=${city}&appid=${apiKey}&units=${unit}`);
+        const forecastResponse = await fetch(`${forecastUrl}?q=${encodeURIComponent(city.trim())}&appid=${apiKey}&units=${unit}`);
         if (!forecastResponse.ok) {
             throw new Error("Forecast data unavailable");
         }
         const forecastData = await forecastResponse.json();
         console.log("Forecast Data:", forecastData);
 
-        lastCity = city;
-        updateRecentSearches(city);
+        lastCity = city.trim();
+        updateRecentSearches(city.trim());
         updateUI(currentData, forecastData);
     } catch (error) {
         console.error("Error fetching weather:", error);
@@ -85,6 +87,7 @@ async function getWeatherByLocation() {
 }
 
 function updateUI(currentData, forecastData) {
+    console.log("Updating UI");
     const cityName = document.getElementById("city-name");
     const currentTemp = document.getElementById("current-temp");
     const currentDesc = document.getElementById("current-desc");
@@ -94,6 +97,12 @@ function updateUI(currentData, forecastData) {
     const currentSunrise = document.getElementById("current-sunrise");
     const currentSunset = document.getElementById("current-sunset");
     const currentIcon = document.getElementById("current-icon");
+
+    if (!cityName || !currentTemp || !currentDesc || !currentHumidity || !currentWind || !currentPressure || !currentSunrise || !currentSunset || !currentIcon) {
+        console.error("One or more DOM elements not found");
+        document.getElementById("error-message").textContent = "UI error: Elements not found";
+        return;
+    }
 
     cityName.textContent = currentData.name;
     const temp = Math.round(currentData.main.temp);
@@ -111,51 +120,73 @@ function updateUI(currentData, forecastData) {
     console.log(`Temperature (Celsius): ${tempCelsius}, Unit: ${unit}`);
     const className = tempCelsius <= 15 ? "cool" : "warm";
     console.log(`Applied class: ${className}`);
-    document.querySelector(".container").classList.remove("cool", "warm");
-    document.querySelector(".weather-card").classList.remove("cool", "warm");
-    document.querySelector(".hourly-forecast").classList.remove("cool", "warm");
-    document.querySelector(".daily-forecast").classList.remove("cool", "warm");
-    document.querySelector(".recent-searches").classList.remove("cool", "warm");
-    document.querySelectorAll(".hourly-item").forEach(item => item.classList.remove("cool", "warm"));
-    document.querySelectorAll(".daily-item").forEach(item => item.classList.remove("cool", "warm"));
-    document.querySelector(".container").classList.add(className);
-    document.querySelector(".weather-card").classList.add(className);
-    document.querySelector(".hourly-forecast").classList.add(className);
-    document.querySelector(".daily-forecast").classList.add(className);
-    document.querySelector(".recent-searches").classList.add(className);
-    document.querySelectorAll(".hourly-item").forEach(item => item.classList.add(className));
-    document.querySelectorAll(".daily-item").forEach(item => item.classList.add(className));
+
+    const elements = {
+        container: document.querySelector(".container"),
+        weatherCard: document.querySelector(".weather-card"),
+        hourlyForecast: document.querySelector(".hourly-forecast"),
+        dailyForecast: document.querySelector(".daily-forecast"),
+        recentSearches: document.querySelector(".recent-searches"),
+        hourlyItems: document.querySelectorAll(".hourly-item"),
+        dailyItems: document.querySelectorAll(".daily-item")
+    };
+
+    for (const [key, element] of Object.entries(elements)) {
+        if (element instanceof NodeList) {
+            element.forEach(item => {
+                if (item) {
+                    item.classList.remove("cool", "warm");
+                    item.classList.add(className);
+                } else {
+                    console.warn(`Element in ${key} is null`);
+                }
+            });
+        } else if (element) {
+            element.classList.remove("cool", "warm");
+            element.classList.add(className);
+        } else {
+            console.warn(`Element ${key} not found`);
+        }
+    }
 
     const hourlyList = document.getElementById("hourly-list");
-    hourlyList.innerHTML = "";
-    forecastData.list.slice(0, 8).forEach(item => {
-        const time = new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const temp = Math.round(item.main.temp);
-        hourlyList.innerHTML += `
-            <div class="hourly-item ${className}">
-                <p>${time}</p>
-                <img src="http://openweathermap.org/img/wn/${item.weather[0].icon}.png" alt="Weather Icon">
-                <p>${temp}${unit === "metric" ? "°C" : "°F"}</p>
-                <p>${item.weather[0].description}</p>
-            </div>
-        `;
-    });
+    if (hourlyList) {
+        hourlyList.innerHTML = "";
+        forecastData.list.slice(0, 8).forEach(item => {
+            const time = new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const temp = Math.round(item.main.temp);
+            hourlyList.innerHTML += `
+                <div class="hourly-item ${className}">
+                    <p>${time}</p>
+                    <img src="http://openweathermap.org/img/wn/${item.weather[0].icon}.png" alt="Weather Icon">
+                    <p>${temp}${unit === "metric" ? "°C" : "°F"}</p>
+                    <p>${item.weather[0].description}</p>
+                </div>
+            `;
+        });
+    } else {
+        console.warn("hourly-list not found");
+    }
 
     const dailyList = document.getElementById("daily-list");
-    dailyList.innerHTML = "";
-    const dailyData = forecastData.list.filter((item, index) => index % 8 === 0).slice(0, 5);
-    dailyData.forEach(item => {
-        const date = new Date(item.dt * 1000).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
-        const temp = Math.round(item.main.temp);
-        dailyList.innerHTML += `
-            <div class="daily-item ${className}">
-                <p>${date}</p>
-                <img src="http://openweathermap.org/img/wn/${item.weather[0].icon}.png" alt="Weather Icon">
-                <p>Temp: ${temp}${unit === "metric" ? "°C" : "°F"}</p>
-                <p>${item.weather[0].description}</p>
-            </div>
-        `;
-    });
+    if (dailyList) {
+        dailyList.innerHTML = "";
+        const dailyData = forecastData.list.filter((item, index) => index % 8 === 0).slice(0, 5);
+        dailyData.forEach(item => {
+            const date = new Date(item.dt * 1000).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+            const temp = Math.round(item.main.temp);
+            dailyList.innerHTML += `
+                <div class="daily-item ${className}">
+                    <p>${date}</p>
+                    <img src="http://openweathermap.org/img/wn/${item.weather[0].icon}.png" alt="Weather Icon">
+                    <p>Temp: ${temp}${unit === "metric" ? "°C" : "°F"}</p>
+                    <p>${item.weather[0].description}</p>
+                </div>
+            `;
+        });
+    } else {
+        console.warn("daily-list not found");
+    }
 
     showTab("current");
 }
@@ -181,6 +212,10 @@ function updateRecentSearches(city) {
 
 function displayRecentSearches() {
     const searchList = document.getElementById("recent-search-list");
+    if (!searchList) {
+        console.warn("recent-search-list not found");
+        return;
+    }
     const searches = JSON.parse(localStorage.getItem("recentSearches") || "[]");
     searchList.innerHTML = "";
     searches.forEach(city => {
@@ -199,14 +234,22 @@ function displayRecentSearches() {
 
 function showTab(tabId) {
     console.log(`Tab clicked: ${tabId}`);
-    document.querySelectorAll(".weather-section").forEach(section => {
-        section.classList.remove("active");
-    });
-    document.querySelectorAll(".tab").forEach(tab => {
-        tab.classList.remove("active");
-    });
-    document.getElementById(tabId).classList.add("active");
-    document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add("active");
+    const sections = document.querySelectorAll(".weather-section");
+    const tabs = document.querySelectorAll(".tab");
+    if (!sections.length || !tabs.length) {
+        console.warn("Weather sections or tabs not found");
+        return;
+    }
+    sections.forEach(section => section.classList.remove("active"));
+    tabs.forEach(tab => tab.classList.remove("active"));
+    const section = document.getElementById(tabId);
+    const tab = document.querySelector(`.tab[data-tab="${tabId}"]`);
+    if (section && tab) {
+        section.classList.add("active");
+        tab.classList.add("active");
+    } else {
+        console.warn(`Section or tab for ${tabId} not found`);
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -214,17 +257,28 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem("recentSearches");
     displayRecentSearches();
 
-    document.getElementById("search-btn").addEventListener("click", () => {
-        console.log("Search button clicked");
-        const city = document.getElementById("city-input").value.trim();
+    const searchBtn = document.getElementById("search-btn");
+    const locationBtn = document.getElementById("location-btn");
+    const unitToggle = document.getElementById("unit-toggle");
+    const cityInput = document.getElementById("city-input");
+
+    if (!searchBtn || !locationBtn || !unitToggle || !cityInput) {
+        console.error("One or more button/input elements not found");
+        document.getElementById("error-message").textContent = "UI error: Buttons not found";
+        return;
+    }
+
+    searchBtn.addEventListener("click", () => {
+        const city = cityInput.value.trim();
+        console.log(`Search button clicked with city: "${city}"`);
         getWeather(city);
     });
 
-    document.getElementById("location-btn").addEventListener("click", () => {
+    locationBtn.addEventListener("click", () => {
         getWeatherByLocation();
     });
 
-    document.getElementById("unit-toggle").addEventListener("click", () => {
+    unitToggle.addEventListener("click", () => {
         toggleUnit();
     });
 
@@ -235,10 +289,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    document.getElementById("city-input").addEventListener("keypress", (event) => {
+    cityInput.addEventListener("keypress", (event) => {
         if (event.key === "Enter") {
-            console.log("Enter key pressed");
-            const city = document.getElementById("city-input").value.trim();
+            const city = cityInput.value.trim();
+            console.log(`Enter key pressed with city: "${city}"`);
             getWeather(city);
         }
     });
