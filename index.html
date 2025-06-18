@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="search-box">
+            <input type="text" id="city-input" placeholder="Enter city name">
+            <button onclick="getWeather()">Search</button>
+            <button onclick="getWeatherByLocation()">Use My Location</button>
+        </div>
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('current')">Current</button>
+            <button class="tab" onclick="showTab('hourly')">Hourly</button>
+            <button class="tab" onclick="showTab('daily')">5-Day</button>
+        </div>
+        <div id="error-message" class="error"></div>
+        <div id="loading" class="loading">Loading...</div>
+
+        <!-- Current Weather -->
+        <div id="current" class="weather-section active">
+            <div class="weather-card">
+                <h2 id="city-name">City Name</h2>
+                <img id="current-icon" src="" alt="Weather Icon" style="display: none;">
+                <p id="current-temp">25°C</p>
+                <p id="current-desc">Clear Sky</p>
+                <div class="details">
+                    <p>Humidity: <span id="current-humidity">60%</span></p>
+                    <p>Wind Speed: <span id="current-wind">5 km/h</span></p>
+                    <p>Pressure: <span id="current-pressure">1012 hPa</span></p>
+                    <p>Sunrise: <span id="current-sunrise">6:00 AM</span></p>
+                    <p>Sunset: <span id="current-sunset">6:00 PM</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hourly Forecast -->
+        <div id="hourly" class="weather-section">
+            <div class="hourly-forecast">
+                <div id="hourly-list"></div>
+            </div>
+        </div>
+
+        <!-- 5-Day Forecast -->
+        <div id="daily" class="weather-section">
+            <div class="daily-forecast">
+                <div id="daily-list"></div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
