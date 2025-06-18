@@ -4,7 +4,7 @@ const forecastUrl = "https://api.openweathermap.org/data/2.5/forecast";
 let unit = "metric"; // Default unit
 let lastCity = null; // Track last searched city
 
-async function getWeather(city = document.getElementById("city-input").value.trim()) {
+async function getWeather(city) {
     const errorMessage = document.getElementById("error-message");
     const loading = document.getElementById("loading");
 
@@ -17,7 +17,6 @@ async function getWeather(city = document.getElementById("city-input").value.tri
     errorMessage.textContent = "";
 
     try {
-        // Fetch current weather
         const currentResponse = await fetch(`${currentWeatherUrl}?q=${city}&appid=${apiKey}&units=${unit}`);
         if (!currentResponse.ok) {
             throw new Error("City not found or API error");
@@ -25,7 +24,6 @@ async function getWeather(city = document.getElementById("city-input").value.tri
         const currentData = await currentResponse.json();
         console.log("Current Weather Data:", currentData);
 
-        // Fetch 5-day forecast
         const forecastResponse = await fetch(`${forecastUrl}?q=${city}&appid=${apiKey}&units=${unit}`);
         if (!forecastResponse.ok) {
             throw new Error("Forecast data unavailable");
@@ -33,7 +31,6 @@ async function getWeather(city = document.getElementById("city-input").value.tri
         const forecastData = await forecastResponse.json();
         console.log("Forecast Data:", forecastData);
 
-        // Update recent searches
         lastCity = city;
         updateRecentSearches(city);
         updateUI(currentData, forecastData);
@@ -49,6 +46,7 @@ async function getWeather(city = document.getElementById("city-input").value.tri
 }
 
 async function getWeatherByLocation() {
+    console.log("Location button clicked");
     if (!navigator.geolocation) {
         document.getElementById("error-message").textContent = "Geolocation not supported";
         return;
@@ -87,19 +85,18 @@ async function getWeatherByLocation() {
 }
 
 function updateUI(currentData, forecastData) {
-    // Update current weather
     const cityName = document.getElementById("city-name");
     const currentTemp = document.getElementById("current-temp");
     const currentDesc = document.getElementById("current-desc");
     const currentHumidity = document.getElementById("current-humidity");
     const currentWind = document.getElementById("current-wind");
-    const currentPressure = document.getElement hydrateById("current-pressure");
+    const currentPressure = document.getElementById("current-pressure");
     const currentSunrise = document.getElementById("current-sunrise");
     const currentSunset = document.getElementById("current-sunset");
     const currentIcon = document.getElementById("current-icon");
 
     cityName.textContent = currentData.name;
-    const temp = Math.round(unit === "metric" ? currentData.main.temp : (currentData.main.temp * 25/5) + 9);
+    const temp = Math.round(currentData.main.temp);
     currentTemp.textContent = `${temp}${unit === "metric" ? "°C" : "°F"}`;
     currentDesc.textContent = currentData.weather[0].description;
     currentHumidity.textContent = `${currentData.main.humidity}%`;
@@ -110,7 +107,6 @@ function updateUI(currentData, forecastData) {
     currentIcon.src = `http://openweathermap.org/img/wn/${currentData.weather[0].icon}@2x.png`;
     currentIcon.style.display = "block";
 
-    // Update divs based on temperature (in Celsius)
     const tempCelsius = unit === "metric" ? currentData.main.temp : (currentData.main.temp - 32) * 5/9;
     console.log(`Temperature (Celsius): ${tempCelsius}, Unit: ${unit}`);
     const className = tempCelsius <= 15 ? "cool" : "warm";
@@ -130,7 +126,6 @@ function updateUI(currentData, forecastData) {
     document.querySelectorAll(".hourly-item").forEach(item => item.classList.add(className));
     document.querySelectorAll(".daily-item").forEach(item => item.classList.add(className));
 
-    // Update hourly forecast
     const hourlyList = document.getElementById("hourly-list");
     hourlyList.innerHTML = "";
     forecastData.list.slice(0, 8).forEach(item => {
@@ -140,13 +135,12 @@ function updateUI(currentData, forecastData) {
             <div class="hourly-item ${className}">
                 <p>${time}</p>
                 <img src="http://openweathermap.org/img/wn/${item.weather[0].icon}.png" alt="Weather Icon">
-                <p>${temp}${unit === "metric" ? "°C" : "°F"}`;
+                <p>${temp}${unit === "metric" ? "°C" : "°F"}</p>
                 <p>${item.weather[0].description}</p>
             </div>
         `;
     });
 
-    // Update 5-day forecast
     const dailyList = document.getElementById("daily-list");
     dailyList.innerHTML = "";
     const dailyData = forecastData.list.filter((item, index) => index % 8 === 0).slice(0, 5);
@@ -157,30 +151,30 @@ function updateUI(currentData, forecastData) {
             <div class="daily-item ${className}">
                 <p>${date}</p>
                 <img src="http://openweathermap.org/img/wn/${item.weather[0].icon}.png" alt="Weather Icon">
-                <p>Temp: ${temp}${unit === "metric" ? "°C" : "°F"}`;
+                <p>Temp: ${temp}${unit === "metric" ? "°C" : "°F"}</p>
                 <p>${item.weather[0].description}</p>
             </div>
         `;
     });
 
-    // Show current tab
     showTab("current");
 }
 
 function toggleUnit() {
+    console.log("Toggle button clicked");
     unit = unit === "metric" ? "imperial" : "metric";
     document.getElementById("unit-toggle").textContent = unit === "metric" ? "To °F" : "To °C";
     console.log("Unit toggled to:", unit);
     if (lastCity) {
-        getWeather(lastCity); // Re-fetch with new unit
+        getWeather(lastCity);
     }
 }
 
 function updateRecentSearches(city) {
     let searches = JSON.parse(localStorage.getItem("recentSearches") || "[]");
-    searches = searches.filter(item => item !== city); // Remove duplicates
-    searches.unshift(city); // Add to start
-    if (searches.length > 5) searches.pop(); // Limit to 5
+    searches = searches.filter(item => item !== city);
+    searches.unshift(city);
+    if (searches.length > 5) searches.pop();
     localStorage.setItem("recentSearches", JSON.stringify(searches));
     displayRecentSearches();
 }
@@ -192,17 +186,19 @@ function displayRecentSearches() {
     searches.forEach(city => {
         const li = document.createElement("li");
         li.textContent = city;
-        li.onclick = async () => {
+        li.addEventListener("click", async () => {
+            console.log(`Recent search clicked: ${city}`);
             li.classList.add("loading");
             document.getElementById("city-input").value = city;
             await getWeather(city);
             li.classList.remove("loading");
-        };
+        });
         searchList.appendChild(li);
     });
 }
 
 function showTab(tabId) {
+    console.log(`Tab clicked: ${tabId}`);
     document.querySelectorAll(".weather-section").forEach(section => {
         section.classList.remove("active");
     });
@@ -210,18 +206,40 @@ function showTab(tabId) {
         tab.classList.remove("active");
     });
     document.getElementById(tabId).classList.add("active");
-    document.querySelector(`button[onclick="showTab('${tabId}')"]`).classList.add("active");
+    document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add("active");
 }
 
-// Clear recent searches on page load
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("Page loaded");
     localStorage.removeItem("recentSearches");
     displayRecentSearches();
-});
 
-// Allow pressing Enter to search
-document.getElementById("city-input").addEventListener("keypress", function (event) {
-    if (event.key === "Enter") {
-        getWeather();
-    }
+    document.getElementById("search-btn").addEventListener("click", () => {
+        console.log("Search button clicked");
+        const city = document.getElementById("city-input").value.trim();
+        getWeather(city);
+    });
+
+    document.getElementById("location-btn").addEventListener("click", () => {
+        getWeatherByLocation();
+    });
+
+    document.getElementById("unit-toggle").addEventListener("click", () => {
+        toggleUnit();
+    });
+
+    document.querySelectorAll(".tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+            const tabId = tab.getAttribute("data-tab");
+            showTab(tabId);
+        });
+    });
+
+    document.getElementById("city-input").addEventListener("keypress", (event) => {
+        if (event.key === "Enter") {
+            console.log("Enter key pressed");
+            const city = document.getElementById("city-input").value.trim();
+            getWeather(city);
+        }
+    });
 });
